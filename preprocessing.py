@@ -24,6 +24,15 @@ def VL_preprocessing(input):
                        padding(
                                input.sample(frac=1).reset_index()
                                )])
-    
+
+    # for i in range(ad_range - 1):
+    #     dataset = pd.concat([dataset,
+    #                          padding(
+    #                              input.sample(frac=1).reset_index()
+    #                          )])
+    #
+    # dataset = pd.concat([dataset, padding(input)])
+
+
     preprocessed_dataset = (dataset.to_numpy(), goal)
     return(preprocessed_dataset)
