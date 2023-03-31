@@ -5,10 +5,10 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def create_dataset():
+def create_dataset(n):
     datasets = VL_preprocessing(random_junk_group())[0]
     goals = VL_preprocessing(random_junk_group())[1]
-    n= 1
+
 
 
     for i in tqdm(range(n-1)):
