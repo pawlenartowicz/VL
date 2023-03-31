@@ -11,7 +11,7 @@ import numpy as np
 
 
 if not os.path.exists('data/df_train.csv'):
-    data, labels = create_dataset()
+    data, labels = create_dataset(1000)
 
     number_of_responses = int(len(data) / len(labels))
     # data to dataframe
@@ -60,7 +60,7 @@ epochs = 1000
 layer_list = [1000, 1000, 1000, 1000, 1000]
 input_size = number_of_responses * 40
 savedir = r'D:\GitHub\VL\models\test_1'
-batch_size = 1000
+batch_size = 4000
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True)
