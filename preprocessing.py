@@ -10,12 +10,13 @@ def padding(full, max_rows = 500, max_items = 40):
     return(full) 
 
 def VL_preprocessing(input):
-    m=np.random.randint(0, 100, size=1)
-    goal = np.zeros((100,1))
+    ad_range = 2
+    m=np.random.randint(0, ad_range, size=1)
+    goal = np.zeros((ad_range,1))
     goal[m] = 1
     dataset = pd.DataFrame(columns=range(40))
 
-    for i in range(100):
+    for i in range(ad_range):
         if(i==m):
             dataset = pd.concat([dataset, padding(input)])
         else:
