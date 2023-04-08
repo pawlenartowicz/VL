@@ -9,16 +9,17 @@ import pandas as pd
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import numpy as np
 
+overwrite = False
 
-if not os.path.exists('data/df_train.csv'):
-    data, labels = create_dataset(1000)
+if not os.path.exists('data/df_train.csv') or overwrite == True:
+    data, labels = create_dataset(10000)
 
     number_of_responses = int(len(data) / len(labels))
     # data to dataframe
     df = pd.DataFrame(data)
     labels_list = [[label] * number_of_responses for label in labels]
     labels_list = [item for sublist in labels_list for item in sublist]
-    df['label'] = [i[0] for i in labels_list]
+    df['label'] = [label[0] for label in labels_list]
     questionnaire_number = [i for i in range(1, len(labels) + 1)]
     questionnaire_number_list = [ [i] * number_of_responses for i in questionnaire_number]
     questionnaire_number_list = [item for sublist in questionnaire_number_list for item in sublist]
@@ -38,10 +39,6 @@ if not os.path.exists('data/df_train.csv'):
     df_val = df_val.reset_index(drop=True)
     df_test = df_test.reset_index(drop=True)
 
-    del df_train['questionnaire_number']
-    del df_val['questionnaire_number']
-    del df_test['questionnaire_number']
-
     df_train.to_csv('data/df_train.csv', index=False)
     df_val.to_csv('data/df_val.csv', index=False)
     df_test.to_csv('data/df_test.csv', index=False)
@@ -57,17 +54,17 @@ train, val= Dataset(df_train, number_of_responses),\
 
 
 epochs = 1000
-layer_list = [1000, 1000, 1000, 1000, 1000]
+layer_list = [10000]
 input_size = number_of_responses * 40
 savedir = r'D:\GitHub\VL\models\test_1'
-batch_size = 4000
+batch_size = 1000
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True)
 val_dataloader = torch.utils.data.DataLoader(val, batch_size=batch_size)
 
 
-model = Simple_Net(0.5, input_size, layer_list, 1)
+model = Simple_Net(0.3, input_size, layer_list, 1)
 # load
 
 criterion = torch.nn.BCELoss()

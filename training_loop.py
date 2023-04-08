@@ -12,6 +12,7 @@ def training_loop(train_dataloader, val_dataloader, model, criterion, optimizer,
         # to device
         model.train()
         for train_input, train_label in tqdm(train_dataloader):
+            model.zero_grad()
             train_label = train_label.to(device).float()
             # train input are vectors
             train_input = train_input.to(device).float()
@@ -24,7 +25,9 @@ def training_loop(train_dataloader, val_dataloader, model, criterion, optimizer,
 
             del output, train_label, train_input
 
-            model.zero_grad()
+            # gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
             batch_loss.backward()
             optimizer.step()
             scheduler.step()

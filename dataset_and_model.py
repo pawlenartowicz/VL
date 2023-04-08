@@ -11,7 +11,7 @@ class Dataset(torch.utils.data.Dataset):
             self.labels = [df['label'][i] for i in range(0, len(df), number_of_responses)]
             self.training = True
 
-        self.matrices = [np.array(df.iloc[i:i+number_of_responses, :-1]) for i in range(0, len(df), number_of_responses)]
+        self.matrices = [np.array(df.iloc[i:i+number_of_responses, :-2]) for i in range(0, len(df), number_of_responses)]
 
     def classes(self):
         return self.labels
