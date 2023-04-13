@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-
+# flawed an outdated
 def create_dataset(n):
     datasets = VL_preprocessing(random_junk_group())[0]
     goals = VL_preprocessing(random_junk_group())[1]
@@ -27,3 +27,28 @@ def create_dataset(n):
         goals = np.concatenate([goals, VL_preprocessing(input)[1]])
 
     return datasets, goals
+
+# simple and slow
+def create_dataset_basic(n):
+    datasets = padding(control_group())
+    goals = np.concatenate([np.ones((3*n,1)), np.zeros((3*n,1))])
+    
+    for i in tqdm(range(3*n-1)):
+        input = control_group()
+        datasets = np.concatenate([datasets, padding(input)])
+        
+    for i in tqdm(range(n)):
+        input = random_junk_group()
+        datasets = np.concatenate([datasets, padding(input)])
+        
+    for i in tqdm(range(n)):
+        input = flat_junk_group()
+        datasets = np.concatenate([datasets, padding(input)])
+
+    for i in tqdm(range(n)):
+        input = ufo_junk_group()
+        datasets = np.concatenate([datasets, padding(input)])
+
+    return datasets, goals
+
+x = create_dataset_basic(1)[1]
