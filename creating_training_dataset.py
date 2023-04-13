@@ -50,5 +50,3 @@ def create_dataset_basic(n):
         datasets = np.concatenate([datasets, padding(input)])
 
     return datasets, goals
-
-x = create_dataset_basic(1)[1]
