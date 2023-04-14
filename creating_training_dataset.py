@@ -49,9 +49,4 @@ def create_dataset_basic(n):
         input = ufo_junk_group()
         datasets = np.concatenate([datasets, padding(input)])
 
-    # randomize the order of the dataset alongside the goals
-    p = np.random.permutation(len(datasets))
-    datasets = datasets[p]
-    goals = goals[p]
-
     return datasets, goals
