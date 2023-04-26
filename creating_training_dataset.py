@@ -66,6 +66,3 @@ def create_dataset_trivial(n):
         datasets = np.concatenate([datasets, padding(input)])
 
     return datasets, goals
-
-
-x = create_dataset_trivial(1)[0]
