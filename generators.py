@@ -147,3 +147,42 @@ def ufo_junk_group(max_rows = 500, max_items = 40):
     full = full.sort_values(by=['Order'])
     del full['Order']
     return(full) 
+
+def junk_test(max_rows = 500, max_items = 40):
+    # Random number of responsen
+    n_resp=np.random.randint(20, max_rows, size=1)
+    n_true=np.random.randint(n_resp*2/3, n_resp*5/6, size=1)
+    n_false = n_resp - n_true
+
+    # Random number of items
+    n=np.random.randint(1, max_items, size=1)
+    n = int(n)
+
+    # Random means
+    means = 2*np.random.random(size=n)-1
+
+    # Random covariance matrix
+    b = 2*np.random.random(size=(n,n))-1
+    b_symm = (b + b.T)/2
+
+    # Matrix of responses
+    responses = rng.multivariate_normal(means, b_symm, check_valid="ignore", size=n_true, method='eigh')
+    responses = pd.DataFrame(responses)
+
+    # Add Order
+    responses.insert(0, 'Order', range(1, 1+len(responses)))
+
+    b_flat = np.ones([n, n])
+    junk_means = 0*np.random.random(size=n)+3
+    junk_zeros = rng.multivariate_normal(junk_means, b_flat, check_valid="ignore", size=n_false)
+    junk_zeros = pd.DataFrame(junk_zeros)
+    junk_zeros.insert(0, 'Order', np.random.normal(
+                                                    loc= ((np.random.random()*5*n_true)/6 + 1/6),
+                                                    scale=np.random.random()*n_true/12,
+                                                    size=n_false
+                                                    ))
+    
+    full = pd.concat([responses, junk_zeros])
+    full = full.sort_values(by=['Order'])
+    del full['Order']
+    return(full)

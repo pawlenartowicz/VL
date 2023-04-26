@@ -49,9 +49,23 @@ def create_dataset_basic(n):
         input = ufo_junk_group()
         datasets = np.concatenate([datasets, padding(input)])
 
-    # randomize the order of the dataset alongside the goals
-    p = np.random.permutation(len(datasets))
-    datasets = datasets[p]
-    goals = goals[p]
+    return datasets, goals
+
+
+# trivial and slow
+def create_dataset_trivial(n):
+    datasets = padding(control_group())
+    goals = np.concatenate([np.ones((n,1)), np.zeros((n,1))])
+    
+    for i in tqdm(range(n-1)):
+        input = control_group()
+        datasets = np.concatenate([datasets, padding(input)])
+        
+    for i in tqdm(range(n)):
+        input = junk_test()
+        datasets = np.concatenate([datasets, padding(input)])
 
     return datasets, goals
+
+
+x = create_dataset_trivial(1)[0]
