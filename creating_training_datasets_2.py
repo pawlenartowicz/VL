@@ -6,11 +6,11 @@ from tqdm import tqdm
 from random import shuffle
 
 
-def mixed_generator(number_of_junk_questionaries = 1, input_param = 1, junk_ratio = (0.2,0.4), max_dispersion = 0.25, return_parametres = False, true_questionaries_per_junk = 1, min_size = (20,5), max_size = (500,40), bootstrap = False, padding = False, noise1=0.01, noise2=0.01):
-    x1= generator(number_of_junk_questionaries, return_parametres, true_questionaries_per_junk, min_size, max_size, bootstrap).ufo_junk_group(input_param, junk_ratio, max_dispersion)
-    x2= generator(number_of_junk_questionaries, return_parametres, true_questionaries_per_junk, min_size, max_size, bootstrap).corelated_junk_group(input_param, junk_ratio, max_dispersion, noise1)
-    x3= generator(number_of_junk_questionaries, return_parametres, true_questionaries_per_junk, min_size, max_size, bootstrap).uncorelated_junk_group(input_param, junk_ratio, max_dispersion)
-    x4= generator(number_of_junk_questionaries, return_parametres, true_questionaries_per_junk, min_size, max_size, bootstrap).equal_junk_group(input_param, junk_ratio, max_dispersion, noise2)   
+def MixedGenerator(numberOfJunkQuestionaries = 1, input_param = 1, junk_ratio = (0.2,0.4), max_dispersion = 0.25, returnParametres = False, trueQuestionariesPerJunk = 1, min_size = (20,5), max_size = (500,40), bootstrap = False, padding = False, noise1=0.01, noise2=0.01):
+    x1= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).ufo_junk_group(input_param, junk_ratio, max_dispersion)
+    x2= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).corelated_junk_group(input_param, junk_ratio, max_dispersion, noise1)
+    x3= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).uncorelated_junk_group(input_param, junk_ratio, max_dispersion)
+    x4= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).equal_junk_group(input_param, junk_ratio, max_dispersion, noise2)   
     datasets = x1+x2+x3+x4
     shuffle(datasets)
     
@@ -20,14 +20,14 @@ def mixed_generator(number_of_junk_questionaries = 1, input_param = 1, junk_rati
 
 # generator class
 class generator:
-    def __init__(self, number_of_junk_questionaries = 1, return_parametres = False, true_questionaries_per_junk = 1, min_size = (20,5), max_size = (500,40), bootstrap = False, padding = False):
-        self.njq = number_of_junk_questionaries
-        self.tpj = true_questionaries_per_junk
-        self.ntq = number_of_junk_questionaries * true_questionaries_per_junk
-        self.max_rows = max_size[0]
-        self.max_items = max_size[1]
-        self.min_rows = min_size[0]
-        self.min_items = min_size[1]
+    def __init__(self, numberOfJunkQuestionaries = 1, return_parametres = False, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = False):
+        self.njq = numberOfJunkQuestionaries
+        self.tpj = truePerJunkRatio
+        self.ntq = numberOfJunkQuestionaries * truePerJunkRatio
+        self.max_rows = maxSize[0]
+        self.max_items = maxSize[1]
+        self.min_rows = minSize[0]
+        self.min_items = minSize[1]
         self.bootstrap = bootstrap
         self.padding = padding
         self.return_parametres = return_parametres
@@ -41,7 +41,7 @@ class generator:
     
     
         
-    def control_group(self, input_param = None):
+    def control_group(self, inputParam = None):
         datasets = []
         for _ in tqdm(range(self.ntq)):
         
@@ -49,10 +49,10 @@ class generator:
             n_rows  = np.random.randint(self.min_rows, self.max_rows)
             n_items = np.random.randint(self.min_items, self.max_items)
             
-            if input_param == None:
+            if inputParam == None:
                 param = np.random.randint(1, n_items)
             else:
-                param = input_param
+                param = inputParam
             
             # Create dataset
             q = control(n_rows, n_items, param)
