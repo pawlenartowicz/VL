@@ -60,6 +60,11 @@ def bootstrap(in_datasets, tpj, return_parametres):
                 out_datasets.append( (x, 0) )
     return(out_datasets)
 
+def normalize(input):
+    inputCentered = input - input.mean(axis = 0)
+    inputNormalized = inputCentered / inputCentered.std(axis=0)
+    return(inputNormalized)
+
 # deprecated
 def VL_preprocessing(input):
     ad_range = 2

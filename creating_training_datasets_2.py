@@ -5,40 +5,53 @@ import numpy as np
 from tqdm import tqdm
 from random import shuffle
 
+# Variables related to data
+#       'customParam' is custom parametres of inner corelation or consistensy in single generated dataset, the lower, the greater the is mutual correlation. It should be lower than minimal number of items;
+#           best values are: 1 or 'None' (then it'll be randomized).
+#       'dispersion' is standard deviation of altered part's index.
+#       'maxDispersion' is maximum standard devaiaton of dispersion of junk responses in dataset. For more information look at merge_q funcion in 'auxiliary.py'.
+#       'junkRatio' is tuple of minimum and maximum share of "junk" responses in dataset. Should be between 0 and 1.
+#       'minSize' and 'maxSize' are, respectively minimum and maximum size of generated questionnaire, whehere first number is related to number of rows (answers) and second is related to number of items.
 
-def MixedGenerator(numberOfJunkQuestionaries = 1, input_param = 1, junk_ratio = (0.2,0.4), max_dispersion = 0.25, returnParametres = False, trueQuestionariesPerJunk = 1, min_size = (20,5), max_size = (500,40), bootstrap = False, padding = False, noise1=0.01, noise2=0.01):
-    x1= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).ufo_junk_group(input_param, junk_ratio, max_dispersion)
-    x2= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).corelated_junk_group(input_param, junk_ratio, max_dispersion, noise1)
-    x3= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).uncorelated_junk_group(input_param, junk_ratio, max_dispersion)
-    x4= generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, min_size, max_size, bootstrap).equal_junk_group(input_param, junk_ratio, max_dispersion, noise2)   
+# For some functions
+#        'noise' - is another custom parametres related to certain generetors, look for corresponding function to see more details
+
+# Variables related to process of creating
+#       'numberOfJunkQuestionaries' - number of 'junk' questionaries (of each type in MixedGenerator), should be a natural number.
+#       'trueQuestionariesPerJunk' - number of 'correct' questionaries per each junk one.
+#       'bootstrap' (false by default) - generating bootstraped questionaries instead of control_group.
+#       'padding'   (true by default) - resize each questionnaire to max size by adding zeroes.
+#       'returnParametres' - when 'True' each questionaries have aditional vector with ex ante and ex post parametres of 'junkiness'
+ 
+ 
+# MixedGenerator is basic function for creating dataset of junk and correct datasets
+
+def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (0.2,0.4), maxDispersion = 0.25, returnParametres = False, trueQuestionariesPerJunk = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = True, noise1=0.01, noise2=0.01):
+    gen = generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, minSize, maxSize, bootstrap, padding)
+    x1 =         gen.ufo_junk_group(customParam, junkRatio, maxDispersion)
+    x2 =   gen.corelated_junk_group(customParam, junkRatio, maxDispersion, noise1)
+    x3 = gen.uncorelated_junk_group(customParam, junkRatio, maxDispersion)
+    x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)   
     datasets = x1+x2+x3+x4
     shuffle(datasets)
     
-    if padding == True:
-        datasets = padding_dataset(datasets)
     return(datasets)
 
 # generator class
 class generator:
-    def __init__(self, numberOfJunkQuestionaries = 1, return_parametres = False, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = False):
+    def __init__(self, numberOfJunkQuestionaries = 1, returnParametres = False, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = False):
         self.njq = numberOfJunkQuestionaries
         self.tpj = truePerJunkRatio
         self.ntq = numberOfJunkQuestionaries * truePerJunkRatio
-        self.max_rows = maxSize[0]
-        self.max_items = maxSize[1]
-        self.min_rows = minSize[0]
-        self.min_items = minSize[1]
+        self.maxRows = maxSize[0]
+        self.maxItems = maxSize[1]
+        self.minRows = minSize[0]
+        self.minItems = minSize[1]
         self.bootstrap = bootstrap
         self.padding = padding
-        self.return_parametres = return_parametres
+        self.returnParametres = returnParametres
         
-    # Variables for all methods
-    #       'input_param' is custom parametres of inbetween corelation, the lower, the greater the is mutual correlation, it should be lower than minimal number of items;
-    #           best values are: 0 or 'None' (then it'll be randomized).
-    #       'dispersion' is standard deviation of altered part's index.
-    #       'junk_ratio' is tuple of minimum and maximum share of "junk" responses in dataset. Should be between 0 and 1.
-    #       'max_dispersion' is maximum standard devaiaton of dispersion of junk responses in dataset. For more information look at merge_q funcion in auxiliary.py
-    
+   
     
         
     def control_group(self, inputParam = None):
@@ -46,204 +59,220 @@ class generator:
         for _ in tqdm(range(self.ntq)):
         
             # Set random parametres
-            n_rows  = np.random.randint(self.min_rows, self.max_rows)
-            n_items = np.random.randint(self.min_items, self.max_items)
+            nRows  = np.random.randint(self.minRows, self.maxRows)
+            nItems = np.random.randint(self.minItems, self.maxItems)
             
             if inputParam == None:
-                param = np.random.randint(1, n_items)
+                param = np.random.randint(1, nItems)
             else:
                 param = inputParam
             
             # Create dataset
-            q = control(n_rows, n_items, param)
+            q = control(nRows, nItems, param)
             
-            if self.return_parametres == True:
-                parametres = ('control',param)
+            # Normalize dataset
+            q = normalize(q)
+            
+            if self.returnParametres == True:
+                parametres = ('control', param)
                 datasets.append((q, 0, parametres))
             else:
                 datasets.append((q, 0))
         
         if self.padding == True:
-            datasets = padding_dataset(datasets, self.max_rows, self.max_items)    
+            datasets = padding_dataset(datasets, self.maxRows, self.maxItems)
+            
         return(datasets)
 
-    def ufo_junk_group(self, input_param = None, junk_ratio = (0.40,0.60), max_dispersion = 0.25):
+    def ufo_junk_group(self, customParam = None, junkRatio = (0.40, 0.60), maxDispersion = 0.25):
         datasets = []
         self.ntq
         for _ in tqdm(range(self.njq)):
                 
             # Set random parametres for questionaries
-            n_rows  = np.random.randint(self.min_rows, self.max_rows)
-            n_items = np.random.randint(self.min_items, self.max_items)
+            nRows  = np.random.randint(self.minRows, self.maxRows)
+            nItems = np.random.randint(self.minItems, self.maxItems)
             
             # Set number of rows in 1st part
-            n1_rows = np.random.randint(junk_ratio[0] * n_rows, junk_ratio[1] * n_rows)
-            n2_rows = n_rows - n1_rows
+            n1Rows = np.random.randint(junkRatio[0] * nRows, junkRatio[1] * nRows)
+            n2Rows = nRows - n1Rows
             
-            if input_param == None:
-                param = np.random.randint(1, n_items)
+            if customParam == None:
+                param = np.random.randint(1, nItems)
             else:
-                param = input_param
+                param = customParam
             
             # Create two parts of dataset (junk_ufo() is the same function as control; see generators2)
-            q1 = control(n1_rows, n_items, param)
-            q2 = junk_ufo(n2_rows, n_items, param)   
+            q1 = control(n1Rows, nItems, param)
+            q2 = junk_ufo(n2Rows, nItems, param)   
             
             # Set parametres of junk order 
-            location = np.random.randint(0,n1_rows)
-            dispersion = np.random.random() * n1_rows * max_dispersion
+            location = np.random.randint(0,n1Rows)
+            dispersion = np.random.random() * n1Rows * maxDispersion
             
             # Merge
             q=merge_q(q1,q2,location, dispersion)
             
-            if self.return_parametres == True:
-                parametres = ('ufo_junk', param, n2_rows/n_rows, location, dispersion)
+            # Normalize dataset
+            q = normalize(q)            
+            
+            if self.returnParametres == True:
+                parametres = ('ufo_junk', param, n2Rows/nRows, location, dispersion)
                 datasets.append((q, 1, parametres))
             else:
                 datasets.append((q, 1))   
         
        # Add control if bootstrap is off     
         if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.return_parametres).control_group(param)
+            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
         else:
-            datasets = datasets + bootstrap(datasets, self.tpj, self.return_parametres)
+            datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
             
         shuffle(datasets)
         if self.padding == True:
-            datasets = padding_dataset(datasets, self.max_rows, self.max_items)  
+            datasets = padding_dataset(datasets, self.maxRows, self.maxItems)  
         return(datasets)
 
-    def uncorelated_junk_group(self, input_param = None, junk_ratio = (0.40,0.60), max_dispersion = 0.25):
+    def uncorelated_junk_group(self, customParam = None, junkRatio = (0.40, 0.60), maxDispersion = 0.25):
         datasets = []
         for _ in tqdm(range(self.njq)):
                 
             # Set random parametres for questionaries
-            n_rows  = np.random.randint(self.min_rows, self.max_rows)
-            n_items = np.random.randint(self.min_items, self.max_items)
+            nRows  = np.random.randint(self.minRows, self.maxRows)
+            nItems = np.random.randint(self.minItems, self.maxItems)
             
             # Set number of rows in 1st part
-            n1_rows = np.random.randint(junk_ratio[0] * n_rows, junk_ratio[1] * n_rows)
-            n2_rows = n_rows - n1_rows
+            n1Rows = np.random.randint(junkRatio[0] * nRows, junkRatio[1] * nRows)
+            n2Rows = nRows - n1Rows
             
-            if input_param == None:
-                param = np.random.randint(1, n_items)
+            if customParam == None:
+                param = np.random.randint(1, nItems)
             else:
-                param = input_param
+                param = customParam
             
             # Create two parts of dataset
-            q1 = control(n1_rows, n_items, param)
-            q2 = uncorelated_junk(n2_rows, n_items)   
+            q1 = control(n1Rows, nItems, param)
+            q2 = uncorelated_junk(n2Rows, nItems)   
             
             # Set parametres of junk order 
-            location = np.random.randint(0,n1_rows)
-            dispersion = np.random.random() * n1_rows * max_dispersion
+            location = np.random.randint(0,n1Rows)
+            dispersion = np.random.random() * n1Rows * maxDispersion
             
             # Merge
             q=merge_q(q1,q2,location, dispersion)
             
-            if self.return_parametres == True:
-                parametres = ('uncorelated_junk', param, n2_rows/n_rows, location, dispersion)
+            # Normalize dataset
+            q = normalize(q)
+                        
+            if self.returnParametres == True:
+                parametres = ('uncorelated_junk', param, n2Rows/nRows, location, dispersion)
                 datasets.append((q, 1, parametres))
             else:
                 datasets.append((q, 1))
             
        # Add control if bootstrap is off     
         if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.return_parametres).control_group(param)
+            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
         else:
-            datasets = datasets + bootstrap(datasets, self.tpj, self.return_parametres)
+            datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
         if self.padding == True:
-            datasets = padding_dataset(datasets, self.max_rows, self.max_items)
+            datasets = padding_dataset(datasets, self.maxRows, self.maxItems)
         return(datasets)
 
     # 'noise' is custom parametre of noise in correlation. If noise = 0 corelation are perfect, if noise >1 (eq.=1) correlations are not "ideal"
-    def corelated_junk_group(self, input_param = None, junk_ratio = (0.40,0.60), max_dispersion = 0.25, noise = 0):
+    def corelated_junk_group(self, customParam = None, junkRatio = (0.40, 0.60), maxDispersion = 0.25, noise = 0):
         datasets = []
         for _ in tqdm(range(self.njq)):                
             # Set random parametres for questionaries
-            n_rows  = np.random.randint(self.min_rows, self.max_rows)
-            n_items = np.random.randint(self.min_items, self.max_items)
+            nRows  = np.random.randint(self.minRows, self.maxRows)
+            nItems = np.random.randint(self.minItems, self.maxItems)
             
             # Set number of rows in 1st part
-            n1_rows = np.random.randint(junk_ratio[0] * n_rows, junk_ratio[1] * n_rows)
-            n2_rows = n_rows - n1_rows
+            n1Rows = np.random.randint(junkRatio[0] * nRows, junkRatio[1] * nRows)
+            n2Rows = nRows - n1Rows
             
-            if input_param == None:
-                param = np.random.randint(1, n_items)
+            if customParam == None:
+                param = np.random.randint(1, nItems)
             else:
-                param = input_param
+                param = customParam
             
             # Create two parts of dataset
-            q1 = control(n1_rows, n_items, param)
-            q2 = corelated_junk(n2_rows, n_items, noise)   
+            q1 = control(n1Rows, nItems, param)
+            q2 = corelated_junk(n2Rows, nItems, noise)   
             
             # Set parametres of junk order 
-            location = np.random.randint(0,n1_rows)
-            dispersion = np.random.random() * n1_rows * max_dispersion
+            location = np.random.randint(0,n1Rows)
+            dispersion = np.random.random() * n1Rows * maxDispersion
             
             # Merge
             q=merge_q(q1,q2,location, dispersion)
             
-            if self.return_parametres == True:
-                parametres = ('corelated_junk_group', param, n2_rows/n_rows, location, dispersion)
+            # Normalize dataset
+            q = normalize(q)   
+            
+            if self.returnParametres == True:
+                parametres = ('corelated_junk_group', param, n2Rows/nRows, location, dispersion)
                 datasets.append((q, 1, parametres))
             else:
                 datasets.append((q, 1))   
         
        # Add control if bootstrap is off     
         if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.return_parametres).control_group(param)
+            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
         else:
-            datasets = datasets + bootstrap(datasets, self.tpj, self.return_parametres)
+            datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
         if self.padding == True:
-            datasets = padding_dataset(datasets, self.max_rows, self.max_items)
+            datasets = padding_dataset(datasets, self.maxRows, self.maxItems)
         return(datasets)
 
     # 'noise' is custom parametre of noise in correlation. If noise = 0 all junk responses are the same, if bigger, there is some noise
-    def equal_junk_group(self, input_param = None, junk_ratio = (0.40,0.60), max_dispersion = 0.25, noise = 0):
+    def equal_junk_group(self, customParam = None, junkRatio = (0.40, 0.60), maxDispersion = 0.25, noise = 0):
         datasets = []
         for _ in tqdm(range(self.njq)):  
             # Set random parametres for questionaries
-            n_rows  = np.random.randint(self.min_rows, self.max_rows)
-            n_items = np.random.randint(self.min_items, self.max_items)
+            nRows  = np.random.randint(self.minRows, self.maxRows)
+            nItems = np.random.randint(self.minItems, self.maxItems)
             
             # Set number of rows in 1st part
-            n1_rows = np.random.randint(junk_ratio[0] * n_rows, junk_ratio[1] * n_rows)
-            n2_rows = n_rows - n1_rows
+            n1Rows = np.random.randint(junkRatio[0] * nRows, junkRatio[1] * nRows)
+            n2Rows = nRows - n1Rows
             
-            if input_param == None:
-                param = np.random.randint(1, n_items)
+            if customParam == None:
+                param = np.random.randint(1, nItems)
             else:
-                param = input_param
+                param = customParam
             
             # Create two parts of dataset
-            q1 = control(n1_rows, n_items, param)
-            q2 = corelated_junk(n2_rows, n_items, noise)   
+            q1 = control(n1Rows, nItems, param)
+            q2 = corelated_junk(n2Rows, nItems, noise)   
             
             # Set parametres of junk order 
-            location = np.random.randint(0,n1_rows)
-            dispersion = np.random.random() * n1_rows * max_dispersion
+            location = np.random.randint(0,n1Rows)
+            dispersion = np.random.random() * n1Rows * maxDispersion
             
             # Merge
             q=merge_q(q1,q2,location, dispersion)
             
-            if self.return_parametres == True:
-                parametres = ('equal_junk_group', param, n2_rows/n_rows, location, dispersion)
+            # Normalize dataset
+            q = normalize(q)
+            
+            if self.returnParametres == True:
+                parametres = ('equal_junk_group', param, n2Rows/nRows, location, dispersion)
                 datasets.append((q, 1, parametres))
             else:
                 datasets.append((q, 1))                
        
        # Add control if bootstrap is off     
         if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.return_parametres).control_group(param)
+            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
         else:
-            datasets = datasets + bootstrap(datasets, self.tpj, self.return_parametres)
+            datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
         if self.padding == True:
-            datasets = padding_dataset(datasets, self.max_rows, self.max_items)
+            datasets = padding_dataset(datasets, self.maxRows, self.maxItems)
         return(datasets)
