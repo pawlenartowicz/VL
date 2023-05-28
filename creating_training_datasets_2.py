@@ -13,9 +13,11 @@ def mixed_generator(number_of_junk_questionaries = 1, input_param = 1, junk_rati
     x4= generator(number_of_junk_questionaries, return_parametres, true_questionaries_per_junk, min_size, max_size, bootstrap).equal_junk_group(input_param, junk_ratio, max_dispersion, noise2)   
     datasets = x1+x2+x3+x4
     shuffle(datasets)
+    max_rows = max_size[0]
+    max_items = max_size[1]
     
     if padding == True:
-        datasets = padding_dataset(datasets)
+        datasets = padding_dataset(datasets, max_rows, max_items)
     return(datasets)
 
 # generator class

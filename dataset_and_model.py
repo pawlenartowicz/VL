@@ -76,3 +76,32 @@ class Simple_Net(nn.Module):
         x = self.sigmoid(x)
 
         return x
+
+class CNN_Discriminator(torch.nn.Module):
+    def __init__(self):
+        super(CNN_Discriminator, self).__init__()
+        self.conv_disc_simple = torch.nn.Conv1d(in_channels=500, out_channels=100, kernel_size= 2,
+                                                stride=1)  # 40
+        self.conv_disc_short = torch.nn.Conv1d(in_channels=500, out_channels=100, kernel_size=4,
+                                               stride=1)  # 38
+        self.conv_disc_long = torch.nn.Conv1d(in_channels=500, out_channels=100, kernel_size=6,
+                                              stride=1)  # 35
+        self.linear_disc_1 = torch.nn.Linear(((39 * 100) + (37 * 100) + (35 * 100)), 300)
+        self.linear_disc_2 = torch.nn.Linear(300, 1)
+        self.norm = torch.nn.BatchNorm1d(100)
+
+    def forward(self, x):
+        x_simple = torch.nn.functional.relu(self.conv_disc_simple(x))
+        x_short = torch.nn.functional.relu(self.conv_disc_short(x))
+        x_long = torch.nn.functional.relu(self.conv_disc_long(x))
+        x_simple = self.norm(x_simple)
+        x_short = self.norm(x_short)
+        x_long = self.norm(x_long)
+        x = torch.cat((x_simple, x_short, x_long), dim=2)
+        x = x.squeeze()
+        x = x.view(x.size(0), -1)
+        x = torch.nn.functional.relu(self.linear_disc_1(x))
+        x = self.linear_disc_2(x)
+        x = torch.sigmoid(x)
+
+        return x

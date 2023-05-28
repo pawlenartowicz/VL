@@ -1,9 +1,9 @@
 import sys, os
 import torch
-from dataset_and_model import Dataset, Simple_Net
+from dataset_and_model import Dataset, Simple_Net, CNN_Discriminator
 from training_loop import training_loop
 import wandb
-from creating_training_dataset import create_dataset
+from creating_training_datasets_2 import mixed_generator
 from transformers import get_linear_schedule_with_warmup
 import pandas as pd
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
@@ -12,14 +12,19 @@ import numpy as np
 overwrite = False
 
 if not os.path.exists('data/df_train.csv') or overwrite == True:
-    data, labels = create_dataset(10000)
+    list_of_tuples = mixed_generator(1000, padding = True)
+    data, labels = zip(*list_of_tuples)
+
+    # concat data
+    data = np.concatenate(data, axis=0)
+
 
     number_of_responses = int(len(data) / len(labels))
     # data to dataframe
     df = pd.DataFrame(data)
     labels_list = [[label] * number_of_responses for label in labels]
     labels_list = [item for sublist in labels_list for item in sublist]
-    df['label'] = [label[0] for label in labels_list]
+    df['label'] = labels_list
     questionnaire_number = [i for i in range(1, len(labels) + 1)]
     questionnaire_number_list = [ [i] * number_of_responses for i in questionnaire_number]
     questionnaire_number_list = [item for sublist in questionnaire_number_list for item in sublist]
@@ -54,24 +59,25 @@ train, val= Dataset(df_train, number_of_responses),\
 
 
 epochs = 1000
-layer_list = [10000]
+# layer_list = [1000, 500, 100]
 input_size = number_of_responses * 40
-savedir = r'D:\GitHub\VL\models\test_1'
+savedir = r'D:\GitHub\VL\models\test_1.pt'
 batch_size = 1000
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True)
 val_dataloader = torch.utils.data.DataLoader(val, batch_size=batch_size)
 
-
-model = Simple_Net(0.3, input_size, layer_list, 1)
+layer_list = [1000, 500, 100]
+model = Simple_Net(0.5, input_size, layer_list, 1)
+# model = CNN_Discriminator()
 # load
 
 criterion = torch.nn.BCELoss()
 optimizer = torch.optim.AdamW(model.parameters(),
-                  lr=5e-5,
+                  lr=5e-4,
                   eps=1e-8,  # Epsilon
-                  weight_decay=0.3,
+                  weight_decay=2,
                   amsgrad=True,
                   betas = (0.9, 0.999))
 

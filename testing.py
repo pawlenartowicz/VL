@@ -1,18 +1,21 @@
 import sys, os
 import torch
-sys.path.insert(0, r'D:\GitHub\ergodicity_1991\simple_net')
+import pandas as pd
 from dataset_and_model import Dataset, Simple_Net
-from preparing_data import load_test
 
-df_test, label_dict = load_test()
+df_train = pd.read_csv('data/df_train.csv')
+df_val = pd.read_csv('data/df_val.csv')
+df_test = pd.read_csv('data/df_test.csv')
+number_of_responses = 500
 
-number_of_responses = 100
 test = Dataset(df_test, number_of_responses)
-layer_list = [800, 800, 800, 800]
+layer_list = [1000, 500, 100]
 input_size = number_of_responses * 40
 
-model = Simple_Net(0.3, input_size, layer_list, len(label_dict))
-model.load_state_dict(torch.load(r'D:\data\data_hackaton\models\test_8'))
+model = Simple_Net(0.3, input_size, layer_list, 1)
+savedir = r'D:\GitHub\VL\models\test_1.pt'
+
+model.load_state_dict(torch.load(savedir))
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -31,19 +34,18 @@ for test_input, test_label in test_dataloader:
     test_input = test_input.to(device).float()
     output = model(test_input)
     probs.extend(output.tolist())
-    _, pred = torch.max(output, dim=1)
-    predictions.extend(pred.tolist())
+    predictions.extend([1 if output[i] > 0.5 else 0 for i in range(len(output))])
     reals.extend(test_label.tolist())
 
-import pickle
-with open(r'results\probs.pkl', 'wb') as f:
-    pickle.dump(probs, f)
-
-with open(r'results\predictions.pkl', 'wb') as f:
-    pickle.dump(predictions, f)
-
-with open(r'results\reals.pkl', 'wb') as f:
-    pickle.dump(reals, f)
+# import pickle
+# with open(r'results\probs.pkl', 'wb') as f:
+#     pickle.dump(probs, f)
+#
+# with open(r'results\predictions.pkl', 'wb') as f:
+#     pickle.dump(predictions, f)
+#
+# with open(r'results\reals.pkl', 'wb') as f:
+#     pickle.dump(reals, f)
 
 
 
