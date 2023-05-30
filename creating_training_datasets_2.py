@@ -37,6 +37,8 @@ def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (
     max_rows = max_size[0]
     max_items = max_size[1]
     
+    if padding == True:
+        datasets = padding_dataset(datasets, max_rows, max_items)
     return(datasets)
 
 # generator class
