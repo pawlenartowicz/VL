@@ -34,6 +34,8 @@ def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (
     x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)   
     datasets = x1+x2+x3+x4
     shuffle(datasets)
+    max_rows = max_size[0]
+    max_items = max_size[1]
     
     return(datasets)
 
