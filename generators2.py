@@ -42,7 +42,7 @@ def uncorelated_junk(n_rows, n_items):
 
 
 # group of random, highly corelated responses
-# noise should be in [0, 1]
+# @noise should be in [0, 1]
 def corelated_junk(n_rows, n_items, noise):
     # Random means rescaled to -1:1
     means = 2*np.random.random(size=n_items)-1  
@@ -58,9 +58,9 @@ def corelated_junk(n_rows, n_items, noise):
         responses = rng.multivariate_normal(means, cov_matrix, size=n_rows, method='cholesky')  
         return(responses)
     
-# group of random, highly corelated responses
-# noise should be in [0, 1]
-def equal_junk(n_rows, n_items, noise=1):
+# group of random, uniform responses
+# @noise should be in [0, 1]
+def equal_junk(n_rows, n_items, noise = 0):
     # Random means rescaled to -1:1
     means = 2*np.random.random(size=n_items)-1  
     
@@ -68,7 +68,7 @@ def equal_junk(n_rows, n_items, noise=1):
         cov_matrix = np.zeros([n_items, n_items])
 
         responses = rng.multivariate_normal(means, cov_matrix, size=n_rows, check_valid='ignore', method='svd')  
-        return(responses, cov_matrix)        
+        return(responses)        
     else:
         cov_matrix = np.zeros([n_items, n_items]) + np.eye(n_items)*noise
         
