@@ -32,7 +32,6 @@ def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (
     x2 =   gen.corelated_junk_group(customParam, junkRatio, maxDispersion, noise1)
     x3 = gen.uncorelated_junk_group(customParam, junkRatio, maxDispersion)
     x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)
-    x_control = generator(numberOfJunkQuestionaries, returnParametres, truePerJunkRatio, minSize, maxSize, bootstrap, padding)
     datasets = x1+x2+x3+x4
     shuffle(datasets)
 
