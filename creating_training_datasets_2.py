@@ -26,24 +26,21 @@ from random import shuffle
  
 # MixedGenerator is basic function for creating dataset of junk and correct datasets
 
-def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (0.2,0.4), maxDispersion = 0.25, returnParametres = False, trueQuestionariesPerJunk = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = True, noise1=0.01, noise2=0.01):
-    gen = generator(numberOfJunkQuestionaries, returnParametres, trueQuestionariesPerJunk, minSize, maxSize, bootstrap, padding)
+def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (0.2,0.4), maxDispersion = 0.25, returnParametres = False, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = True, noise1=0.01, noise2=0.01):
+    gen = generator(numberOfJunkQuestionaries, returnParametres, truePerJunkRatio, minSize, maxSize, bootstrap, padding)
     x1 =         gen.ufo_junk_group(customParam, junkRatio, maxDispersion)
     x2 =   gen.corelated_junk_group(customParam, junkRatio, maxDispersion, noise1)
     x3 = gen.uncorelated_junk_group(customParam, junkRatio, maxDispersion)
-    x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)   
+    x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)
+    x_control = generator(numberOfJunkQuestionaries, returnParametres, truePerJunkRatio, minSize, maxSize, bootstrap, padding)
     datasets = x1+x2+x3+x4
     shuffle(datasets)
-    max_rows = maxSize[0]
-    max_items = maxSize[1]
-    
-    if padding == True:
-        datasets = padding_dataset(datasets, max_rows, max_items)
+
     return(datasets)
 
 # generator class
 class generator:
-    def __init__(self, numberOfJunkQuestionaries = 1, returnParametres = False, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = False):
+    def __init__(self, numberOfJunkQuestionaries, returnParametres, truePerJunkRatio = 1, minSize = (20,5), maxSize = (500,40), bootstrap = False, padding = False):
         self.njq = numberOfJunkQuestionaries
         self.tpj = truePerJunkRatio
         self.ntq = numberOfJunkQuestionaries * truePerJunkRatio
@@ -126,10 +123,8 @@ class generator:
             else:
                 datasets.append((q, 1))   
         
-       # Add control if bootstrap is off     
-        if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
-        else:
+       # Add bootstrap if bootstrap is on     
+        if self.bootstrap == True:
             datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
             
         shuffle(datasets)
@@ -174,10 +169,8 @@ class generator:
             else:
                 datasets.append((q, 1))
             
-       # Add control if bootstrap is off     
-        if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
-        else:
+       # Add bootstrap if bootstrap is on     
+        if self.bootstrap == True:
             datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
@@ -222,10 +215,8 @@ class generator:
             else:
                 datasets.append((q, 1))   
         
-       # Add control if bootstrap is off     
-        if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
-        else:
+       # Add bootstrap if bootstrap is on     
+        if self.bootstrap == True:
             datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
@@ -270,10 +261,8 @@ class generator:
             else:
                 datasets.append((q, 1))                
        
-       # Add control if bootstrap is off     
-        if self.bootstrap == False:
-            datasets = datasets + generator(self.ntq, self.returnParametres).control_group(param)
-        else:
+       # Add bootstrap if bootstrap is on     
+        if self.bootstrap == True:
             datasets = datasets + bootstrap(datasets, self.tpj, self.returnParametres)
         
         shuffle(datasets)
