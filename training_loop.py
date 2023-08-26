@@ -67,7 +67,8 @@ def training_loop(train_dataloader, val_dataloader, model, criterion, optimizer,
         wandb.log({"Train Loss": total_loss_train / len(train_dataloader),
                    "Validation Loss": total_loss_val / len(val_dataloader),
                    "Validation Accuracy": total_acc_val / len(val_dataloader),
-                   "learning rate": optimizer.param_groups[0]['lr']})
+                   "learning rate": optimizer.param_groups[0]['lr'],
+                   "Total acc train": total_acc_train / len(train_dataloader)})
 
         # print results
         print(f"Epoch {epoch + 1} of {epochs} / Train Loss: {total_loss_train / len(train_dataloader)} "

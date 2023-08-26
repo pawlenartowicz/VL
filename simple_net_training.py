@@ -11,8 +11,8 @@ import numpy as np
 
 overwrite = False
 
-if not os.path.exists('data/df_train.csv') or overwrite == True:
-    list_of_tuples = mixed_generator(1000, padding = True)
+if not os.path.exists('data/df_train_simple.csv') or overwrite == True:
+    list_of_tuples = mixed_generator(numberOfJunkQuestionaries = 1000, junkRatio=(0.4,0.5), maxDispersion=0.1)
     data, labels = zip(*list_of_tuples)
 
     # concat data
@@ -49,9 +49,9 @@ if not os.path.exists('data/df_train.csv') or overwrite == True:
     df_test.to_csv('data/df_test.csv', index=False)
 
 else:
-    df_train = pd.read_csv('data/df_train.csv')
-    df_val = pd.read_csv('data/df_val.csv')
-    df_test = pd.read_csv('data/df_test.csv')
+    df_train = pd.read_csv('data/df_train_simple.csv')
+    df_val = pd.read_csv('data/df_val_simple.csv')
+    df_test = pd.read_csv('data/df_test_simple.csv')
     number_of_responses = 500
 
 train, val= Dataset(df_train, number_of_responses),\
@@ -69,7 +69,7 @@ train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shu
 val_dataloader = torch.utils.data.DataLoader(val, batch_size=batch_size)
 
 layer_list = [1000, 500, 100]
-model = Simple_Net(0.9, input_size, layer_list, 1)
+model = Simple_Net(0.3, input_size, layer_list, 1)
 # model = CNN_Discriminator()
 # load
 
@@ -77,7 +77,7 @@ criterion = torch.nn.BCELoss()
 optimizer = torch.optim.AdamW(model.parameters(),
                   lr=5e-4,
                   eps=1e-8,  # Epsilon
-                  weight_decay=2,
+                  weight_decay=0.2,
                   amsgrad=True,
                   betas = (0.9, 0.999))
 
