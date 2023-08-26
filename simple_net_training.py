@@ -3,7 +3,7 @@ import torch
 from dataset_and_model import Dataset, Simple_Net, CNN_Discriminator
 from training_loop import training_loop
 import wandb
-from creating_training_datasets_2 import mixed_generator
+from creating_training_datasets_2 import MixedGenerator as mixed_generator
 from transformers import get_linear_schedule_with_warmup
 import pandas as pd
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
@@ -69,7 +69,7 @@ train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shu
 val_dataloader = torch.utils.data.DataLoader(val, batch_size=batch_size)
 
 layer_list = [1000, 500, 100]
-model = Simple_Net(0.5, input_size, layer_list, 1)
+model = Simple_Net(0.9, input_size, layer_list, 1)
 # model = CNN_Discriminator()
 # load
 
