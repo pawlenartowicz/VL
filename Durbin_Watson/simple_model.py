@@ -1,4 +1,6 @@
 import sys, os
+import time
+
 import torch
 from dataset_and_model import Dataset, Simple_Net, CNN_Discriminator
 from training_loop import training_loop
@@ -8,12 +10,16 @@ from transformers import get_linear_schedule_with_warmup
 from attention_model import ClassifierWithAttention
 import pandas as pd
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+from tqdm import tqdm
 import numpy as np
+from Durbin_Watson.model import create_residuals
 
-overwrite = False
+overwrite = True
 
-if not os.path.exists('data/df_train.csv') or overwrite == True:
-    list_of_tuples = mixed_generator(numberOfJunkQuestionaries = 1000, junkRatio=(0.4,0.5), maxDispersion=0.1, bootstrap=True)
+data_dir = r'D:\GitHub\VL\data'
+
+if not os.path.exists(os.path.join(data_dir, 'df_train.csv')) or overwrite == True:
+    list_of_tuples = mixed_generator(numberOfJunkQuestionaries = 1000)
     data, labels = zip(*list_of_tuples)
 
     # concat data
@@ -45,23 +51,67 @@ if not os.path.exists('data/df_train.csv') or overwrite == True:
     df_val = df_val.reset_index(drop=True)
     df_test = df_test.reset_index(drop=True)
 
-    df_train.to_csv('data/df_train.csv', index=False)
-    df_val.to_csv('data/df_val.csv', index=False)
-    df_test.to_csv('data/df_test.csv', index=False)
+    # Train
+    print('Creating residuals for train set')
+    sd_list = []
+    for idx, no in enumerate(df_train['questionnaire_number'].unique()):
+        temp_df = df_train.loc[df_train['questionnaire_number'] == no]
+        # remove label and questionnaire_number
+        temp_df = temp_df.drop(['label', 'questionnaire_number', 'residuals'], axis=1)
+        # to torch
+        temp_df = torch.tensor(temp_df.values).float()
+        df_train.loc[df_train['questionnaire_number'] == no, 'residuals'], std = create_residuals(temp_df, plot= True, no = idx)
+        sd_list.append(std)
+        print(torch.mean(torch.Tensor(sd_list)))
+    df_train = df_train[['residuals', 'label', 'questionnaire_number']]
+
+    # Val
+    print('Creating residuals for val set')
+    df_val['residuals'] = 0
+    for no in tqdm(df_val['questionnaire_number'].unique()):
+        temp_df = df_val.loc[df_val['questionnaire_number'] == no]
+        # remove label and questionnaire_number
+        temp_df = temp_df.drop(['label', 'questionnaire_number', 'residuals'], axis=1)
+        # to torch
+        temp_df = torch.tensor(temp_df.values).float()
+        df_val.loc[df_val['questionnaire_number'] == no, 'residuals'], std = create_residuals(temp_df)
+
+    df_val = df_val[['residuals', 'label', 'questionnaire_number']]
+
+    # Test
+    print('Creating residuals for test set')
+    df_test['residuals'] = 0
+    for no in tqdm(df_test['questionnaire_number'].unique()):
+        temp_df = df_test.loc[df_test['questionnaire_number'] == no]
+        # remove label and questionnaire_number
+        temp_df = temp_df.drop(['label', 'questionnaire_number', 'residuals'], axis=1)
+        # to torch
+        temp_df = torch.tensor(temp_df.values).float()
+        df_test.loc[df_test['questionnaire_number'] == no, 'residuals'], std = create_residuals(temp_df)
+
+    df_test = df_test[['residuals', 'label', 'questionnaire_number']]
+
+
+
+    df_train.to_csv(os.path.join(data_dir, 'df_train.csv'), index=False)
+    df_val.to_csv(os.path.join(data_dir, 'df_val.csv'), index=False)
+    df_test.to_csv(os.path.join(data_dir, 'df_test.csv'), index=False)
 
 else:
-    df_train = pd.read_csv('data/df_train.csv')
-    df_val = pd.read_csv('data/df_val.csv')
-    df_test = pd.read_csv('data/df_test.csv')
+    df_train = pd.read_csv(os.path.join(data_dir, 'df_train.csv'))
+    df_val = pd.read_csv(os.path.join(data_dir, 'df_val.csv'))
+    df_test = pd.read_csv(os.path.join(data_dir, 'df_test.csv'))
     number_of_responses = 500
+
 
 train, val= Dataset(df_train, number_of_responses),\
                    Dataset(df_val, number_of_responses)
 
 
+
 epochs = 1000
 # layer_list = [1000, 500, 100]
-input_size = number_of_responses * 40
+input_size = number_of_responses * 1
 savedir = r'D:\GitHub\VL\models\test_1.pt'
 batch_size = 1000
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
