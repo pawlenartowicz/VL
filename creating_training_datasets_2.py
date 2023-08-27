@@ -33,7 +33,8 @@ def MixedGenerator(numberOfJunkQuestionaries = 1, customParam = 1, junkRatio = (
     x3 = gen.uncorelated_junk_group(customParam, junkRatio, maxDispersion)
     x4 =       gen.equal_junk_group(customParam, junkRatio, maxDispersion, noise2)
     if bootstrap == False:
-        x_control = generator(numberOfJunkQuestionaries*4, returnParametres, truePerJunkRatio, minSize, maxSize, bootstrap, padding).control_group(customParam)
+        control = round(numberOfJunkQuestionaries*4*truePerJunkRatio)
+        x_control = generator(control, returnParametres, truePerJunkRatio, minSize, maxSize, bootstrap, padding).control_group(customParam)
         datasets = x1+x2+x3+x4+x_control
     else:
         datasets = x1+x2+x3+x4
