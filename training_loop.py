@@ -18,7 +18,6 @@ def training_loop(train_dataloader, val_dataloader, model, criterion, optimizer,
             train_label = train_label.to(device).float()
             # train input are vectors
             train_input = train_input.to(device).float()
-            print(train_input.shape)
             output = model(train_input)
             output = output.squeeze(1)
             output_list.append(output.mean())

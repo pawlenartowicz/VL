@@ -1,6 +1,4 @@
 import sys, os
-import time
-
 import torch
 from dataset_and_model import Dataset, Simple_Net, CNN_Discriminator
 from training_loop import training_loop
@@ -14,7 +12,7 @@ from tqdm import tqdm
 import numpy as np
 from Durbin_Watson.model import create_residuals
 
-overwrite = True
+overwrite = False
 
 data_dir = r'D:\GitHub\VL\data'
 
@@ -46,6 +44,7 @@ if not os.path.exists(os.path.join(data_dir, 'df_train.csv')) or overwrite == Tr
     df_train = df[df['questionnaire_number'].isin(df_train)]
     df_val = df[df['questionnaire_number'].isin(df_val)]
     df_test = df[df['questionnaire_number'].isin(df_test)]
+    break
     # reset index
     df_train = df_train.reset_index(drop=True)
     df_val = df_val.reset_index(drop=True)
@@ -53,16 +52,17 @@ if not os.path.exists(os.path.join(data_dir, 'df_train.csv')) or overwrite == Tr
 
     # Train
     print('Creating residuals for train set')
+    df_train['residuals'] = 0
     sd_list = []
-    for idx, no in enumerate(df_train['questionnaire_number'].unique()):
+    for no in tqdm(df_train['questionnaire_number'].unique()):
         temp_df = df_train.loc[df_train['questionnaire_number'] == no]
         # remove label and questionnaire_number
         temp_df = temp_df.drop(['label', 'questionnaire_number', 'residuals'], axis=1)
         # to torch
         temp_df = torch.tensor(temp_df.values).float()
-        df_train.loc[df_train['questionnaire_number'] == no, 'residuals'], std = create_residuals(temp_df, plot= True, no = idx)
-        sd_list.append(std)
-        print(torch.mean(torch.Tensor(sd_list)))
+        df_train.loc[df_train['questionnaire_number'] == no, 'residuals'], std = create_residuals(temp_df, no = no)
+        # sd_list.append(std)
+        # print(torch.mean(torch.Tensor(sd_list)))
     df_train = df_train[['residuals', 'label', 'questionnaire_number']]
 
     # Val
