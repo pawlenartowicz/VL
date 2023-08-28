@@ -44,7 +44,6 @@ if not os.path.exists(os.path.join(data_dir, 'df_train.csv')) or overwrite == Tr
     df_train = df[df['questionnaire_number'].isin(df_train)]
     df_val = df[df['questionnaire_number'].isin(df_val)]
     df_test = df[df['questionnaire_number'].isin(df_test)]
-    break
     # reset index
     df_train = df_train.reset_index(drop=True)
     df_val = df_val.reset_index(drop=True)
