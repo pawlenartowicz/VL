@@ -12,7 +12,7 @@ import numpy as np
 
 overwrite = False
 
-if not os.path.exists('data/df_train.csv') or overwrite == True:
+if not os.path.exists('data/df_train_50_0_01.csv') or overwrite == True:
     list_of_tuples = mixed_generator(numberOfJunkQuestionaries = 1000, junkRatio=(0.4,0.5), maxDispersion=0.1, bootstrap=True)
     data, labels = zip(*list_of_tuples)
 
@@ -50,9 +50,9 @@ if not os.path.exists('data/df_train.csv') or overwrite == True:
     df_test.to_csv('data/df_test.csv', index=False)
 
 else:
-    df_train = pd.read_csv('data/df_train.csv')
-    df_val = pd.read_csv('data/df_val.csv')
-    df_test = pd.read_csv('data/df_test.csv')
+    df_train = pd.read_csv('data/df_train_50_0_01.csv')
+    df_val = pd.read_csv('data/df_val_50_0_01.csv')
+    df_test = pd.read_csv('data/df_test_50_0_01.csv')
     number_of_responses = 500
 
 train, val= Dataset(df_train, number_of_responses),\

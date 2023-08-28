@@ -40,7 +40,7 @@ def create_residuals(X_train, layers_list = [100, 100], plot = False, no = None)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     # Training loop
-    for epoch in range(50):  # adjust the number of epochs as needed
+    for epoch in range(100):  # adjust the number of epochs as needed
         optimizer.zero_grad()
         outputs = model(X_train)
         loss = criterion(outputs, y_train)

@@ -1,6 +1,6 @@
 import sys, os
 import torch
-from dataset_and_model import Dataset, Simple_Net, CNN_Discriminator
+from dataset_and_model import Dataset, Simple_Net, LSTM_Discriminator
 from training_loop import training_loop
 import wandb
 from creating_training_datasets_2 import MixedGenerator as mixed_generator
@@ -10,7 +10,7 @@ import pandas as pd
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 from tqdm import tqdm
 import numpy as np
-from Durbin_Watson.model import create_residuals
+from Durbin_Watson.model_M1 import create_residuals
 
 overwrite = False
 
@@ -108,18 +108,18 @@ train, val= Dataset(df_train, number_of_responses),\
 
 
 
-epochs = 1000
+epochs = 10000
 # layer_list = [1000, 500, 100]
 input_size = number_of_responses * 1
 savedir = r'D:\GitHub\VL\models\test_1.pt'
-batch_size = 1000
+batch_size = 500
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 train_dataloader = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True)
 val_dataloader = torch.utils.data.DataLoader(val, batch_size=batch_size)
 
 layer_list = [100, 100, 100, 100]
-model = Simple_Net(0.3, input_size, layer_list, 1)
+model = LSTM_Discriminator()
 # model = ClassifierWithAttention()
 # load
 
@@ -127,7 +127,7 @@ criterion = torch.nn.BCELoss()
 optimizer = torch.optim.AdamW(model.parameters(),
                   lr=5e-4,
                   eps=1e-8,  # Epsilon
-                  weight_decay=0.5,
+                  weight_decay=0.3,
                   amsgrad=True,
                   betas = (0.9, 0.999))
 

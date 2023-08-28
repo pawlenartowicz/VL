@@ -105,3 +105,45 @@ class CNN_Discriminator(torch.nn.Module):
         x = torch.sigmoid(x)
 
         return x
+
+
+
+import torch
+import torch.nn as nn
+
+class LSTM_Discriminator(nn.Module):
+    def __init__(self):
+        super(LSTM_Discriminator, self).__init__()
+        self.lstm_disc = nn.LSTM(input_size=1, hidden_size=100, num_layers=1, batch_first=True)
+        self.linear_disc_1 = nn.Linear(100, 300)
+        self.linear_disc_2 = nn.Linear(300, 1)
+
+    def forward(self, x):
+        out, _ = self.lstm_disc(x)
+        x = out[:, -1, :]
+        x = nn.functional.relu(self.linear_disc_1(x))
+        x = self.linear_disc_2(x)
+        x = torch.sigmoid(x)
+        return x
+
+# # Test the LSTM_Discriminator
+# model = LSTM_Discriminator()
+#
+# # Create dummy input data
+# # Here, let's assume we have 32 sequences, each of length 500, and each sequence element is a scalar.
+# batch_size = 32
+# sequence_length = 500
+# input_dim = 1  # since input_size=1 in LSTM
+#
+# x_test = torch.randn(batch_size, sequence_length, input_dim)
+#
+# # Get predictions from the model
+# predictions = model(x_test)
+#
+# # Print the shape and some values of the predictions
+# print(predictions.shape)  # This should print [32, 1]
+# print(predictions[:5])    # Print first 5 predictions
+
+
+
+

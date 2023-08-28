@@ -3,9 +3,9 @@ import torch
 import pandas as pd
 from dataset_and_model import Dataset, Simple_Net
 
-df_train = pd.read_csv('data/df_train.csv')
-df_val = pd.read_csv('data/df_val.csv')
-df_test = pd.read_csv('data/df_test.csv')
+df_train = pd.read_csv('data/df_train_50_0_01.csv')
+df_val = pd.read_csv('data/df_val_50_0_01.csv')
+df_test = pd.read_csv('data/df_test_50_0_01.csv')
 number_of_responses = 500
 
 test = Dataset(df_test, number_of_responses)
